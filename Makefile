@@ -13,11 +13,11 @@ LFLAGS	=
 # Any libraries to include
 LIBS 	=
 # Source .c files
-SRCS 	= lineread.c mips_read.c
+SRCS 	= mips_disasm.c mips_read.c
 # Object files to compile
 OBJS 	= $(SRCS:.c=.o)
 # Main executable file
-MAIN 	= lineread
+MAIN 	= mips_disasm
 
 .PHONY: depend clean
 
