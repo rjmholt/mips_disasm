@@ -1,0 +1,5 @@
+*.s
+*.o
+mips_disasm
+*.dSYM
+*.bak
