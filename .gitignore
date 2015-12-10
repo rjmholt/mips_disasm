@@ -5,4 +5,4 @@ mips_disasm
 *.bak
 *.py
 *.pyc
-__pycache__/*
+__pycache__
