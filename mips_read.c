@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "mips_read.h"
+#include "mips.h"
 
 /* Sizes and bit regions of MIPS machine words */
 #define OPCODE 6
@@ -63,6 +63,7 @@ Instr mips_machine_read(uint32_t word)
     unsigned opcode;
     opcode = get_bits(word, OPCODE, SIZE - OPCODE);
 
+    /* Assign instruction based on opcode */
     switch (opcode) {
         /* Deal with immediate-type instructions */
         case OP_ADDI:
@@ -92,6 +93,7 @@ Instr mips_machine_read(uint32_t word)
         case OP_SW:
             return immed_instr(SW, word);
         case OP_B:
+            /* bgez and bltz use the same op code, with rt different */
             if (get_bits(word, RT, IMM)) {
                 return immed_instr(BGEZ, word);
             }
@@ -105,17 +107,28 @@ Instr mips_machine_read(uint32_t word)
         case OP_MUL:
             return reg_instr(MUL, word);
         case OP_NOP:
+            /* 0x0 opcodes are decided on the function bits */
             return reg_instr(get_r_instr_type(word), word);
         default:
             fprintf(stderr, "ERROR: Unrecognised instruction\n");
+            exit(1);
     }
 }
 
 unsigned get_bits(uint32_t word, unsigned number, unsigned offset)
 {
-    unsigned mask       = (1 << (number + offset)) - 1;
-    unsigned offmask    = (1 << offset) - 1;
-    return (word & mask & ~offmask) >> offset;
+    unsigned mask       = (1 << number) - 1;
+    unsigned bits       = (word >> offset) & mask;
+#ifdef DEBUG
+    printf("\n\t*DEBUG*\n");
+    printf("\tword = 0x%x\n", word);
+    printf("\tnumber = %d\n", number);
+    printf("\toffset = %d\n", offset);
+    printf("\tmask = 0x%x\n", mask);
+    printf("\toffmask = 0x%x\n", offmask);
+    printf("\tbits = 0x%x\n\n", bits);
+#endif
+    return bits;
 }
 
 Instr immed_instr(Instr_Type type, uint32_t word)
@@ -192,5 +205,6 @@ Instr_Type get_r_instr_type(uint32_t word)
             return NOP;
         default:
             fprintf(stderr, "ERROR: Invalid register-type word\n");
+            exit(1);
     }
 }

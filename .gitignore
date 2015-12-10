@@ -3,3 +3,6 @@
 mips_disasm
 *.dSYM
 *.bak
+*.py
+*.pyc
+__pycache__/*

@@ -1,3 +1,5 @@
+//#define DEBUG
+
 /* Enumerated MIPS instuctions
  * to be used in place of opcodes */
 typedef enum instr_name
@@ -88,6 +90,16 @@ typedef struct Instruction
     Instr_Type type;
     Instr_U in;
 } Instr;
+
+/* Max size of a MIPS program */
+#define NUM_INSTR 1000
+/* Group struct for instructions -- a MIPS program */
+typedef struct instrs_t
+{
+    uint32_t ins[NUM_INSTR];
+    unsigned short len;
+} InstructionArray;
+
 
 /* Reads a 32-bit integer encoding a MIPS instruction,
  * and returns an Instr which stores that instruction

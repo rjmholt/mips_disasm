@@ -1,33 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "mips_read.h"
+#include "mips.h"
 
-#define NUM_INSTR 1000
 #define START_ADDR 0x400000
 #define BYTE 4
 
-void print_instr(unsigned, uint32_t);
+void print_instr(unsigned addr, uint32_t inst_word);
 
-void print_r_instr(Instr);
+void print_r_instr(const char *name, Instr in);
 
-void print_j_instr(Instr);
+void print_j_instr(const char *name, Instr in);
 
-void print_i_instr(Instr);
+void print_i_instr(const char *name, Instr in);
 
-void print_jr_instr(Instr);
+void print_jr_instr(Instr in);
 
-void print_sl_instr(Instr);
+void print_jalr_instr(Instr in);
 
-void print_branch_instr(Instr, bool);
+void print_sl_instr(const char *name, Instr in);
 
-void print_shift_instr(Instr);
+void print_branch_instr(const char *name, Instr in, bool use_rt);
 
-typedef struct instrs_t
-{
-    uint32_t ins[NUM_INSTR];
-    unsigned short len;
-} InstructionArray;
+void print_shift_instr(const char *name, Instr in);
+
+void print_lui_instr(Instr in);
 
 int main(int argc, char **argv)
 {
@@ -57,8 +54,8 @@ int main(int argc, char **argv)
 
     unsigned curr_addr = START_ADDR;
     for (i = 0; i < instr_arr.len; i++) {
-        curr_addr += BYTE;
         print_instr(curr_addr, instr_arr.ins[i]);
+        curr_addr += BYTE;
     }
 
     return 0;
@@ -73,167 +70,153 @@ void print_instr(unsigned addr, uint32_t word)
     switch (in.type) {
         /* immediate-type instructions */
         case ADDI:
-            printf("addi");
-            print_i_instr(in);
+            print_i_instr("addi", in);
             break;
         case ADDIU:
-            printf("addiu");
-            print_i_instr(in);
+            print_i_instr("addiu", in);
             break;
         case ANDI:
-            printf("andi");
-            print_i_instr(in);
+            print_i_instr("andi", in);
             break;
         case BEQ:
-            printf("beq");
-            print_branch_instr(in, true);
+            print_branch_instr("beq", in, true);
             break;
         case BGTZ:
-            printf("bgtz");
-            print_branch_instr(in, false);
+            print_branch_instr("bgtz", in, false);
             break;
         case BGEZ:
-            printf("bgez");
-            print_branch_instr(in, false);
+            print_branch_instr("bgez", in, false);
             break;
         case BLEZ:
-            printf("blez");
-            print_branch_instr(in, false);
+            print_branch_instr("blez", in, false);
             break;
         case BLTZ:
-            printf("bltz");
-            print_branch_instr(in, false);
+            print_branch_instr("bltz", in, false);
             break;
         case BNE:
-            printf("bne");
-            print_branch_instr(in, true);
+            print_branch_instr("bne", in, true);
             break;
         case LB:
-            printf("lb");
-            print_sl_instr(in);
+            print_sl_instr("lb", in);
             break;
         case LUI:
-            printf("lui");
-            print_i_instr(in);
+            print_lui_instr(in);
             break;
         case LW:
-            printf("lw");
-            print_sl_instr(in);
+            print_sl_instr("lw", in);
             break;
         case ORI:
-            printf("ori");
-            print_i_instr(in);
+            print_i_instr("ori", in);
             break;
         case SB:
-            printf("sb");
-            print_sl_instr(in);
+            print_sl_instr("sb", in);
             break;
         case SW:
-            printf("sw");
-            print_sl_instr(in);
+            print_sl_instr("sw", in);
             break;
         /* jump-type instructions */
         case J:
-            printf("j");
-            print_j_instr(in);
+            print_j_instr("j", in);
             break;
         case JAL:
-            printf("jal");
-            print_j_instr(in);
+            print_j_instr("jal", in);
             break;
         /* register-type instructions */
         case ADD:
-            printf("add");
-            print_r_instr(in);
+            print_r_instr("add", in);
             break;
         case ADDU:
-            printf("addu");
-            print_r_instr(in);
+            print_r_instr("addu", in);
             break;
         case AND:
-            printf("and");
-            print_r_instr(in);
+            print_r_instr("and", in);
             break;
         case JALR:
-            printf("jalr");
-            print_jr_instr(in);
+            print_jalr_instr(in);
             break;
         case JR:
-            printf("jr");
             print_jr_instr(in);
             break;
         case MUL:
-            printf("mul");
-            print_r_instr(in);
+            print_r_instr("mul", in);
             break;
         case NOP:
             printf("nop\n");
             break;
         case SLT:
-            printf("slt");
-            print_r_instr(in);
+            print_r_instr("slt", in);
             break;
         case SRA:
-            printf("sra");
-            print_shift_instr(in);
+            print_shift_instr("sra", in);
             break;
         case SUB:
-            printf("sub");
-            print_r_instr(in);
+            print_r_instr("sub", in);
             break;
         case SYSCALL:
             printf("syscall\n");
             break;
         case SLL:
-            printf("sll");
-            print_shift_instr(in);
+#ifdef DEBUG
+            printf("SSL switch\n");
+#endif
+            print_shift_instr("sll", in);
             break;
         default:
             fprintf(stderr, "ERROR: Unrecognised instruction type\n");
     }
 }
 
-void print_r_instr(Instr instr)
+void print_r_instr(const char *name, Instr instr)
 {
     R_Instr in = instr.in.r;
-    printf(" $%d, $%d, $%d\n", in.rd, in.rs, in.rt);
+    printf("%s $%d, $%d, $%d\n", name, in.rd, in.rs, in.rt);
 }
 
-void print_i_instr(Instr instr)
+void print_i_instr(const char *name, Instr instr)
 {
     I_Instr in = instr.in.i;
-    printf(" $%d, $%d, %d\n", in.rt, in.rs, in.imm);
+    printf("%s $%d, $%d, %d\n", name, in.rt, in.rs, in.imm);
 }
 
-void print_j_instr(Instr instr)
+void print_j_instr(const char *name, Instr instr)
 {
-    printf(" 0x%08x\n", instr.in.j.addr << 2);
+    printf("%s 0x%08x\n", name, instr.in.j.addr << 2);
 }
 
 void print_jr_instr(Instr instr)
 {
-    printf(" $%d\n", instr.in.r.rs);
+    printf("jr $%d\n", instr.in.r.rs);
 }
 
-void print_sl_instr(Instr instr)
+void print_jalr_instr(Instr instr)
+{
+    printf("jalr $%d, $%d\n", instr.in.r.rd, instr.in.r.rs);
+}
+
+void print_sl_instr(const char *name, Instr instr)
 {
     I_Instr in = instr.in.i;
-    printf(" $%d, %d($%d)\n", in.rt, BYTE*in.imm, in.rs);
+    printf("%s $%d, %d($%d)\n", name, in.rt, BYTE*in.imm, in.rs);
 }
 
-void print_branch_instr(Instr instr, bool use_rt)
+void print_branch_instr(const char *name, Instr instr, bool use_rt)
 {
     I_Instr in = instr.in.i;
     if (use_rt) {
-        printf(" $%d, $%d, %d\n", in.rs, in.rt, BYTE*in.imm);
+        printf("%s $%d, $%d, %d\n", name, in.rs, in.rt, BYTE*in.imm);
     }
     else {
-        printf(" $%d %d\n", in.rs, BYTE*in.imm);
+        printf("%s $%d %d\n", name, in.rs, BYTE*in.imm);
     }
 }
 
-void print_shift_instr(Instr instr)
+void print_shift_instr(const char *name, Instr instr)
 {
     R_Instr in = instr.in.r;
-    printf(" $%d, $%d, %d\n", in.rd, in.rt, in.shamt);
+    printf("%s $%d, $%d, %d\n", name, in.rd, in.rt, in.shamt);
+}
+
+void print_lui_instr(Instr instr)
+{
+    printf("lui $%d, %d\n", instr.in.i.rt, instr.in.i.imm);
 }
