@@ -6,7 +6,7 @@
 #define START_ADDR 0x400000
 #define BYTE 4
 
-void print_instr(unsigned addr, uint32_t inst_word);
+void print_instr(unsigned addr, Instr inst_word);
 
 void print_r_instr(const char *name, Instr in);
 
@@ -34,20 +34,11 @@ int main(int argc, char **argv)
     int i = 0;
     unsigned int instruction;
     while ((scanf("%x ", &instruction)) == 1) {
-#ifdef DEBUG
-        printf("Instruction: 0x%x\n", instruction);
-#endif
         if (instruction == 0xffffffff) {
-#ifdef DEBUG
-            printf("Breaking\n");
-#endif
             break;
         }
-#ifdef DEBUG
-        printf("Looping\n");
-#endif
 
-        instr_arr.ins[i] = instruction;
+        instr_arr.ins[i] = mips_machine_read(instruction);
         i++;
     }
     instr_arr.len = i;
@@ -61,11 +52,9 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void print_instr(unsigned addr, uint32_t word)
+void print_instr(unsigned addr, Instr in)
 {
-    printf("[0x%08x] 0x%08x ", addr, word);
-
-    Instr in = mips_machine_read(word);
+    printf("[0x%08x] 0x%08x ", addr, in.word);
 
     switch (in.type) {
         /* immediate-type instructions */
@@ -156,9 +145,6 @@ void print_instr(unsigned addr, uint32_t word)
             printf("syscall\n");
             break;
         case SLL:
-#ifdef DEBUG
-            printf("SSL switch\n");
-#endif
             print_shift_instr("sll", in);
             break;
         default:

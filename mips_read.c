@@ -58,6 +58,9 @@ Instr reg_instr(Instr_Type, uint32_t);
 
 Instr_Type get_r_instr_type(uint32_t word);
 
+// TODO create Instruction struct at top level to
+// avoid repetition in more specific assignment funcitons
+// in assigning in.type and in.word
 Instr mips_machine_read(uint32_t word)
 {
     unsigned opcode;
@@ -139,6 +142,7 @@ Instr immed_instr(Instr_Type type, uint32_t word)
     body.imm = get_bits(word, IMM, 0);
 
     Instr instruction;
+    instruction.word = word;
     instruction.type = type;
     instruction.in.i = body;
 
@@ -151,6 +155,7 @@ Instr jump_instr(Instr_Type type, uint32_t word)
     body.addr = get_bits(word, ADDR, 0);
 
     Instr instruction;
+    instruction.word = word;
     instruction.type = type;
     instruction.in.j = body;
 
@@ -166,6 +171,7 @@ Instr reg_instr(Instr_Type type, uint32_t word)
     body.shamt = get_bits(word, SHAMT, FUNCT);
 
     Instr instruction;
+    instruction.word = word;
     instruction.type = type;
     instruction.in.r = body;
 

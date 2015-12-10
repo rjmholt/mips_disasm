@@ -89,6 +89,7 @@ typedef struct Instruction
 {
     Instr_Type type;
     Instr_U in;
+    uint32_t word;
 } Instr;
 
 /* Max size of a MIPS program */
@@ -96,7 +97,7 @@ typedef struct Instruction
 /* Group struct for instructions -- a MIPS program */
 typedef struct instrs_t
 {
-    uint32_t ins[NUM_INSTR];
+    Instr ins[NUM_INSTR];
     unsigned short len;
 } InstructionArray;
 
